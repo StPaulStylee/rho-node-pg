@@ -2,9 +2,12 @@ var express =  require('express');
 var app = express();
 var path = require('path');
 var bodyParser = require('body-parser');
+var booksRouter = require('./routes/books');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
+
+app.use('/books', booksRouter);
 
 // serve the index page at /
 app.get('/', function (req, res) {
