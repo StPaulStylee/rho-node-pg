@@ -1,7 +1,8 @@
 $(function(){
   getBooks();
-
   $('#book-form').on('submit', addBook);
+
+  $('#book-list').on('click', '.save', updateBook);
 });
 
 function getBooks() {
@@ -18,19 +19,24 @@ function displayBooks (response) {
   $list.empty();
   response.forEach(function(book){
     var $li = $('<li></li>');
-    $li.append('<p><strong>' + book.title + '</strong></p>');
-    $li.append('<p><em>' + book.author + '</em></p>');
+    var $form = $('<form></form>');
+    $form.append('<input type="text" name="title" value="' + book.title + '"/>');
+    $form.append('<input type="text" name="author" value="' + book.author + '"/>');
     var date = new Date(book.published);
-    $li.append('<p><time>' + date.toDateString() + '</time></p>');
-    $li.append('<p>' + book.publisher + '</p>');
-    $li.append('<p>Edition: ' + book.edition + '</p>');
+    $form.append('<input type="date" name="published" value="' + date.toISOString().slice(0,10) + '" />');
+    $form.append('<input type="text" name="publisher" value="' + book.publisher + '"/>');
+    $form.append('<input type="text" name="edition" value="' + book.edition + '"/>');
+    var $button = $('<button class="save">Save!</button>');
+    $button.data('id', book.id);
+    $form.append($button);
+    $li.append($form);
     $list.append($li);
   });
 }
 
 function addBook(event) {
   event.preventDefault();
-  bookData = $(this).serialize();
+  var bookData = $(this).serialize();
   $.ajax ({
     type: 'POST',
     url: '/books',
@@ -38,4 +44,19 @@ function addBook(event) {
     success: getBooks
   });
   $(this).find('input').val('');
+}
+
+function updateBook(event) {
+  // Anytime there is a button inside a form, even if it is not a type=submit, it will behave like a submit button. So we
+  // need to call prevent default.
+  event.preventDefault();
+  var $button = $(this);
+  var $form = $button.closest('form');
+  var data = $form.serialize();
+  $.ajax ({
+    type: 'PUT',
+    url: '/books/' + $button.data('id'),
+    data: data,
+    success: getBooks
+  });
 }
